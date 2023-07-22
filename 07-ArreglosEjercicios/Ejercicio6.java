@@ -16,6 +16,8 @@ public class Ejercicio6 {
 
         }
 
+        sc.close();
+
         System.out.print("  Arreglo original: ");
 
         for (int i = 0; i < arreglo.length; i++) {
