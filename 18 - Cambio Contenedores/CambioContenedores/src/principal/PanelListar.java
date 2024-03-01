@@ -1,13 +1,43 @@
 package principal;
 
-import utils.BaseDatos;
+import javax.swing.table.DefaultTableModel;
+import utils.Persona;
 
 public class PanelListar extends javax.swing.JPanel {
-
-    public PanelListar() {
+    
+    Persona listaPersonas[];
+    DefaultTableModel  modelo;
+    
+    public PanelListar(Persona[] listado) {
+        
+        this.listaPersonas = listado;
         initComponents();
+        initAlternComponents();
+        imprimirTabla();
+        
     }
-
+    
+    public void initAlternComponents(){
+        
+        modelo = (DefaultTableModel) tablaPersonas.getModel();
+        tablaPersonas.getTableHeader().setReorderingAllowed(false);
+        tablaPersonas.getTableHeader().setResizingAllowed(false);
+        
+    }
+    
+    public void imprimirTabla(){
+        modelo.setRowCount(0);
+        for(int i = 0;listaPersonas[i] != null;i++){
+            String cedula = listaPersonas[i].getCedula();
+            String nombres = listaPersonas[i].getNombres();
+            String telefono = listaPersonas[i].getTelefono();
+            String email = listaPersonas[i].getEmail();
+            System.out.println("-> "+cedula);
+            
+            Object dato = new Object[]{i, cedula,nombres,telefono,email};
+            modelo.addRow((Object[]) dato);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -71,4 +101,6 @@ public class PanelListar extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tablaPersonas;
     // End of variables declaration//GEN-END:variables
+
+
 }

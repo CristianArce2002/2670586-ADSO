@@ -5,11 +5,14 @@ import java.awt.Image;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import utils.BaseDatos;
+import utils.Persona;
 
 public class Menu extends javax.swing.JFrame {
+    
+    BaseDatos basedatos = new BaseDatos();
+    Persona listado[] = basedatos.extraerPersonas();
 
     public Menu() {
-        BaseDatos basedatos = new BaseDatos();
         initComponents();
         btnListarActionPerformed(null);
         initAlternComponents();
@@ -180,7 +183,7 @@ public class Menu extends javax.swing.JFrame {
     private void btnListarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnListarActionPerformed
        //crear un contenedor nuevo.
        
-       PanelListar nuevo = new PanelListar();
+       PanelListar nuevo = new PanelListar(listado);
        
        //ajustar el tamaño del contenedor nuevo.
        
