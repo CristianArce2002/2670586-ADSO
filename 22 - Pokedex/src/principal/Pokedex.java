@@ -153,6 +153,7 @@ public class Pokedex extends javax.swing.JFrame {
 
         JsonObject jsonObject = JsonParser.parseString(resultado2).getAsJsonObject();
         String id = jsonObject.get("id").getAsString();
+        String nombre = jsonObject.get("name").getAsString();
 
         JsonArray abilitiesArray = jsonObject.getAsJsonArray("abilities");
         StringBuilder habilidades = new StringBuilder();
@@ -164,6 +165,7 @@ public class Pokedex extends javax.swing.JFrame {
         DefaultTableModel model = new DefaultTableModel(new Object[][]{{id, habilidades.toString(), url}}, new String[]{"Numero", "Habilidad", "Url"});
         tabla_pokemon.setModel(model);
         tabla_pokemon.setRowHeight(40);
+        mostrar_nombre.setText(nombre);
     }
 
     public void mostrar() {
@@ -204,6 +206,7 @@ public class Pokedex extends javax.swing.JFrame {
         tabla_pokemon = new javax.swing.JTable();
         jPanel5 = new javax.swing.JPanel();
         img_pokemon = new javax.swing.JLabel();
+        mostrar_nombre = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         lista_pokemon = new javax.swing.JScrollPane();
         contenedor_botones = new javax.swing.JPanel();
@@ -293,12 +296,18 @@ public class Pokedex extends javax.swing.JFrame {
 
         jPanel5.setBackground(new java.awt.Color(255, 255, 255));
         jPanel5.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-        jPanel5.add(img_pokemon, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 0, 460, 460));
+        jPanel5.add(img_pokemon, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 60, 400, 400));
+
+        mostrar_nombre.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        mostrar_nombre.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        mostrar_nombre.setText("Pokemon");
+        jPanel5.add(mostrar_nombre, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 20, 820, -1));
 
         jPanel2.add(jPanel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 50, 820, 460));
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(0, 0, 204));
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         jLabel1.setText("POKEDEX");
         jLabel1.setToolTipText("");
         jPanel2.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 0, 820, 50));
@@ -386,6 +395,7 @@ public class Pokedex extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane lista_pokemon;
+    private javax.swing.JLabel mostrar_nombre;
     private javax.swing.JPanel paginador;
     private javax.swing.JPanel paginador_botones;
     private javax.swing.JTable tabla_pokemon;
