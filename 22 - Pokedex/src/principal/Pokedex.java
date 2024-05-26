@@ -10,8 +10,11 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,15 +33,18 @@ import util.ConsumoAPI;
 
 public class Pokedex extends javax.swing.JFrame {
 
-    int contador = 1;
-    int limite_paginador = 9;
-    int limite = 20;
-    int pagina = 0;
-    int pagina_actual = 0;
-    String url = "https://pokeapi.co/api/v2/pokemon/bulbasaur/";
+    int limitePaginador = 9;
+    int limiteConsulta = 20;
+    int contadorPagina = 1;
+    int paginaActual = 0;
+    JsonArray pokemons = new JsonArray();
     int cantidad_paginas = 0;
     int cantidad_pokemon = 0;
     int ultima_pagina = 0;
+    String[] imagenes = new String[4];
+    int indiceImagen = 0;
+    String url = "";
+    ConsumoAPI consumo = new ConsumoAPI();
 
     public Pokedex() {
         initComponents();
@@ -50,33 +56,52 @@ public class Pokedex extends javax.swing.JFrame {
         setTitle("Pokedex");
         setLocationRelativeTo(null);
 
-        contenedor_botones.setLayout(new GridLayout(0, 1));
+        contenedorBotones.setLayout(new GridLayout(0, 1));
         paginador_botones.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
-        generar_paginador();
-        generar_botones();
-        mostrar();
-        datos_tabla();
+        obtenerPokemons();
+        obtenerUrl(0);
+        generarBotones();
+        mostrarImagen();
+        datosTabla();
+        generarPaginador();
 
         btn_paginador_adelante.setBackground(Color.WHITE);
         btn_paginador_atras.setBackground(Color.WHITE);
         btn_paginador_final.setBackground(Color.WHITE);
         btn_paginador_inicio.setBackground(Color.WHITE);
 
+        icono_izquierda.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (indiceImagen > 0) {
+                    indiceImagen--;
+                }
+                generarImagen();
+            }
+        });
+
+        icono_derecha.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (indiceImagen < (imagenes.length - 1)) {
+                    indiceImagen++;
+                }
+                generarImagen();
+            }
+        });
+
         setVisible(true);
 
     }
 
-    public String generar_url(int number) {
-        String dato = "https://pokeapi.co/api/v2/pokemon/" + number + "/";
-        return dato;
+    public void obtenerUrl(int indice) {
+        url = pokemons.get(indice).getAsJsonObject().get("url").getAsString();
     }
 
-    public void generar_paginador() {
-
+    public void generarPaginador() {
         paginador_botones.removeAll();
-
-        for (int i = contador; i < contador + limite_paginador; i++) {
+        for (int i = contadorPagina; i < contadorPagina + limitePaginador; i++) {
             int pocicion = i;
             JButton boton = new JButton(Integer.toString(pocicion));
             boton.setPreferredSize(new Dimension(80, 50));
@@ -85,117 +110,142 @@ public class Pokedex extends javax.swing.JFrame {
             boton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    pagina = pocicion - 1;
-                    generar_botones();
-                    datos_tabla();
-                    mostrar();
+                    indiceImagen = 0;
+                    paginaActual = (pocicion - 1) * 20;
+                    obtenerPokemons();
+                    obtenerUrl(0);
+                    generarBotones();
+                    mostrarImagen();
+                    datosTabla();
                 }
             });
-            paginador_botones.add(boton);
-            if (pocicion == cantidad_paginas) {
+            if (i > cantidad_paginas) {
                 break;
+            } else {
+                paginador_botones.add(boton);
+                revalidate();
+                repaint();
             }
-
         }
-
-        revalidate();
-        repaint();
-
     }
 
-    public void generar_botones() {
-        contenedor_botones.removeAll();
-        ConsumoAPI consumo = new ConsumoAPI();
-        pagina_actual = pagina * limite;
-        url = generar_url(pagina_actual + 1);
-
-        String respuesta = consumo.consumoGET("https://pokeapi.co/api/v2/pokemon/?limit=" + limite + "&offset=" + (pagina_actual));
-
-        System.out.println(url);
+    public void obtenerPokemons() {
+        String respuesta = consumo.consumoGET("https://pokeapi.co/api/v2/pokemon/?limit=" + limiteConsulta + "&offset=" + paginaActual);
 
         if (respuesta != null) {
+            pokemons = new JsonArray();
+            JsonObject objeto = JsonParser.parseString(respuesta).getAsJsonObject();
+            JsonArray resultado = objeto.getAsJsonArray("results");
+            cantidad_pokemon = objeto.get("count").getAsInt();
+            cantidad_paginas = (cantidad_pokemon + limiteConsulta - 1) / limiteConsulta;
 
-            JsonArray pokemones = JsonParser.parseString(respuesta).getAsJsonObject().getAsJsonArray("results");
-            JsonObject jsonObject = JsonParser.parseString(respuesta).getAsJsonObject();
-            cantidad_pokemon = jsonObject.get("count").getAsInt();
-            cantidad_paginas = (int) Math.ceil((double) cantidad_pokemon / limite);
-            ultima_pagina = cantidad_pokemon / limite;
-
-            for (int i = 0; i < pokemones.size(); i++) {
-                JsonObject pokemon = pokemones.get(i).getAsJsonObject();
-                String nombre = pokemon.get("name").getAsString();
-
-                JButton button = new JButton();
-                button.setPreferredSize(new Dimension(100, 40));
-                button.setBackground(Color.WHITE);
-                button.setBorder(btn_paginador_atras.getBorder());
-                button.setForeground(Color.BLACK);
-                button.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                button.setFont(new Font("Arial", Font.BOLD, 14));
-                button.setText(nombre);
-                button.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        url = pokemon.get("url").getAsString();
-                        mostrar();
-                        datos_tabla();
-                    }
-                });
-                contenedor_botones.add(button);
-
+            for (int i = 0; i < resultado.size(); i++) {
+                pokemons.add(resultado.get(i));
             }
+
         } else {
             System.out.println("Error al consumir la API");
         }
     }
 
-    public void datos_tabla() {
-        ConsumoAPI consumo2 = new ConsumoAPI();
-        String resultado2 = consumo2.consumoGET(url);
+    public void generarBotones() {
+        contenedorBotones.removeAll();
+        for (int i = 0; i < pokemons.size(); i++) {
 
-        JsonObject jsonObject = JsonParser.parseString(resultado2).getAsJsonObject();
-        String id = jsonObject.get("id").getAsString();
-        String nombre = jsonObject.get("name").getAsString();
+            JsonObject objeto = pokemons.get(i).getAsJsonObject();
+            String nombre = objeto.get("name").getAsString();
+            JButton button = new JButton();
 
-        JsonArray abilitiesArray = jsonObject.getAsJsonArray("abilities");
-        DefaultTableModel model = new DefaultTableModel(new Object[abilitiesArray.size()][3], new String[]{"Numero", "Habilidad", "Url"});
+            button.setPreferredSize(new Dimension(100, 40));
+            button.setBackground(Color.WHITE);
+            button.setBorder(btn_paginador_atras.getBorder());
+            button.setForeground(Color.BLACK);
+            button.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            button.setFont(new Font("Arial", Font.BOLD, 14));
+            button.setText(nombre);
 
-        for (int i = 0; i < abilitiesArray.size(); i++) {
-            JsonObject abilityObject = abilitiesArray.get(i).getAsJsonObject().getAsJsonObject("ability");
-            String habilidad = abilityObject.get("name").getAsString();
-            String urlHabilidad = abilityObject.get("url").getAsString();
-            model.setValueAt(i + 1, i, 0);
-            model.setValueAt(habilidad, i, 1);
-            model.setValueAt(urlHabilidad, i, 2);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    url = objeto.get("url").getAsString();
+                    indiceImagen = 0;
+                    mostrarImagen();
+                    datosTabla();
+                }
+            });
+            contenedorBotones.add(button);
+            repaint();
+            revalidate();
         }
-
-        tabla_pokemon.setModel(model);
-        tabla_pokemon.setRowHeight(20);
-        mostrar_nombre.setText(nombre);
     }
 
-    public void mostrar() {
+    public void datosTabla() {
+        String resultado = consumo.consumoGET(url);
+        JsonObject respuesta = JsonParser.parseString(resultado).getAsJsonObject();
+        String nombrePokemon = respuesta.get("name").getAsString();
+        JsonArray habilidades = respuesta.getAsJsonArray("abilities");
 
-        ConsumoAPI consumo2 = new ConsumoAPI();
-        String resultado2 = consumo2.consumoGET(url);
+        Object[][] data = new Object[habilidades.size()][3];
+        for (int i = 0; i < habilidades.size(); i++) {
+            JsonObject habilidadPk = habilidades.get(i).getAsJsonObject().getAsJsonObject("ability");
+            data[i][0] = i + 1;
+            data[i][1] = habilidadPk.get("name").getAsString();
+            data[i][2] = habilidadPk.get("url").getAsString();
+        }
 
-        JsonObject json_img = JsonParser.parseString(resultado2).getAsJsonObject();
-        JsonObject sprites = json_img.getAsJsonObject("sprites");
-        String officialArtworkUrl = sprites.get("other").getAsJsonObject().get("official-artwork").getAsJsonObject().get("front_default").getAsString();
+        tablaHabilidades.setModel(new DefaultTableModel(data, new String[]{"Numero", "Habilidad", "Url"}));
+        tablaHabilidades.setRowHeight(20);
+        etqNombre.setText(nombrePokemon);
+    }
+
+    public void mostrarImagen() {
+
+        ConsumoAPI consumo = new ConsumoAPI();
+        String resultado = consumo.consumoGET(url);
+
+        JsonObject pokemon = JsonParser.parseString(resultado).getAsJsonObject();
+        JsonObject sprites = pokemon.getAsJsonObject("sprites");
+        JsonObject other = sprites.getAsJsonObject("other");
+        JsonObject dreamWorld = other.getAsJsonObject("dream_world");
+        JsonObject officialArtwork = other.getAsJsonObject("official-artwork");
+
+        String imagen1 = "";
+        String imagen2 = "";
+        String imagen3 = "";
+        String imagen4 = "";
 
         try {
-            URL imagen = new URL(officialArtworkUrl);
-            Image image = ImageIO.read(imagen);
+            imagen1 = officialArtwork.get("front_default").getAsString();
+            imagen2 = officialArtwork.get("front_shiny").getAsString();
+            imagen3 = sprites.get("front_default").getAsString();
+            imagen4 = sprites.get("front_shiny").getAsString();
+        } catch (Exception e) {
+            // Manejo de excepciones para todas las variables
+        }
+
+        imagenes[0] = imagen1;
+        imagenes[1] = imagen2;
+        imagenes[2] = imagen3;
+        imagenes[3] = imagen4;
+
+        generarImagen();
+    }
+
+    public void generarImagen() {
+        try {
+            ImageIcon icon = new ImageIcon(new URL(imagenes[indiceImagen]));
+            Image image = icon.getImage();
             int width = img_pokemon.getWidth();
             int height = img_pokemon.getHeight();
             Image scaledImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-            ImageIcon icon = new ImageIcon(scaledImage);
-            img_pokemon.setIcon(icon);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+            img_pokemon.setIcon(new ImageIcon(scaledImage));
 
+        } catch (IOException e) {
+            img_pokemon.setIcon(new ImageIcon("img/error.png"));
+        }
+        revalidate();
+        repaint();
+    }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -209,15 +259,15 @@ public class Pokedex extends javax.swing.JFrame {
         btn_paginador_inicio = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tabla_pokemon = new javax.swing.JTable();
+        tablaHabilidades = new javax.swing.JTable();
         panel_principal = new javax.swing.JPanel();
         img_pokemon = new javax.swing.JLabel();
-        mostrar_nombre = new javax.swing.JLabel();
+        etqNombre = new javax.swing.JLabel();
         icono_izquierda = new javax.swing.JLabel();
         icono_derecha = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         lista_pokemon = new javax.swing.JScrollPane();
-        contenedor_botones = new javax.swing.JPanel();
+        contenedorBotones = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -279,7 +329,7 @@ public class Pokedex extends javax.swing.JFrame {
 
         jPanel2.add(paginador, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 650, 1040, 50));
 
-        tabla_pokemon.setModel(new javax.swing.table.DefaultTableModel(
+        tablaHabilidades.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null}
             },
@@ -287,7 +337,7 @@ public class Pokedex extends javax.swing.JFrame {
                 "Numero", "Habilidad", "Url"
             }
         ));
-        jScrollPane1.setViewportView(tabla_pokemon);
+        jScrollPane1.setViewportView(tablaHabilidades);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -306,10 +356,10 @@ public class Pokedex extends javax.swing.JFrame {
         panel_principal.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
         panel_principal.add(img_pokemon, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 60, 400, 400));
 
-        mostrar_nombre.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        mostrar_nombre.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        mostrar_nombre.setText("Pokemon");
-        panel_principal.add(mostrar_nombre, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 20, 820, -1));
+        etqNombre.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        etqNombre.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        etqNombre.setText("Pokemon");
+        panel_principal.add(etqNombre, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 20, 820, -1));
 
         icono_izquierda.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/flecha_izquierda.png"))); // NOI18N
         icono_izquierda.setText("jLabel2");
@@ -328,20 +378,20 @@ public class Pokedex extends javax.swing.JFrame {
         jLabel1.setToolTipText("");
         jPanel2.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 0, 820, 50));
 
-        contenedor_botones.setBackground(new java.awt.Color(255, 255, 255));
+        contenedorBotones.setBackground(new java.awt.Color(255, 255, 255));
 
-        javax.swing.GroupLayout contenedor_botonesLayout = new javax.swing.GroupLayout(contenedor_botones);
-        contenedor_botones.setLayout(contenedor_botonesLayout);
-        contenedor_botonesLayout.setHorizontalGroup(
-            contenedor_botonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout contenedorBotonesLayout = new javax.swing.GroupLayout(contenedorBotones);
+        contenedorBotones.setLayout(contenedorBotonesLayout);
+        contenedorBotonesLayout.setHorizontalGroup(
+            contenedorBotonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 198, Short.MAX_VALUE)
         );
-        contenedor_botonesLayout.setVerticalGroup(
-            contenedor_botonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        contenedorBotonesLayout.setVerticalGroup(
+            contenedorBotonesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 608, Short.MAX_VALUE)
         );
 
-        lista_pokemon.setViewportView(contenedor_botones);
+        lista_pokemon.setViewportView(contenedorBotones);
 
         jPanel2.add(lista_pokemon, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, 200, 610));
 
@@ -361,38 +411,28 @@ public class Pokedex extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btn_paginador_adelanteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_paginador_adelanteActionPerformed
-
-        if (contador <= cantidad_paginas) {
-            generar_paginador();
-            contador += limite_paginador;
+        if (contadorPagina <= cantidad_paginas) {
+            contadorPagina += limitePaginador;
+            generarPaginador();
         }
+        generarPaginador();
     }//GEN-LAST:event_btn_paginador_adelanteActionPerformed
 
     private void btn_paginador_atrasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_paginador_atrasActionPerformed
-
-        contador -= limite_paginador;
-
-        if (contador < 1) {
-            contador = 1;
-        } else {
-            generar_paginador();
+        if (contadorPagina > limitePaginador) {
+            contadorPagina -= limitePaginador;
+            generarPaginador();
         }
-
     }//GEN-LAST:event_btn_paginador_atrasActionPerformed
 
     private void btn_paginador_inicioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_paginador_inicioActionPerformed
-        pagina = 0;
-        contador = 1;
-        generar_botones();
-        generar_paginador();
-        mostrar();
+        contadorPagina = 1;
+        generarPaginador();
     }//GEN-LAST:event_btn_paginador_inicioActionPerformed
 
     private void btn_paginador_finalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_paginador_finalActionPerformed
-        contador = ultima_pagina;
-        generar_botones();
-        generar_paginador();
-        mostrar();
+        contadorPagina = cantidad_pokemon / limiteConsulta - 1;
+        generarPaginador();
     }//GEN-LAST:event_btn_paginador_finalActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -400,7 +440,8 @@ public class Pokedex extends javax.swing.JFrame {
     private javax.swing.JButton btn_paginador_atras;
     private javax.swing.JButton btn_paginador_final;
     private javax.swing.JButton btn_paginador_inicio;
-    private javax.swing.JPanel contenedor_botones;
+    private javax.swing.JPanel contenedorBotones;
+    private javax.swing.JLabel etqNombre;
     private javax.swing.JLabel icono_derecha;
     private javax.swing.JLabel icono_izquierda;
     private javax.swing.JLabel img_pokemon;
@@ -409,11 +450,10 @@ public class Pokedex extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane lista_pokemon;
-    private javax.swing.JLabel mostrar_nombre;
     private javax.swing.JPanel paginador;
     private javax.swing.JPanel paginador_botones;
     private javax.swing.JPanel panel_principal;
-    private javax.swing.JTable tabla_pokemon;
+    private javax.swing.JTable tablaHabilidades;
     // End of variables declaration//GEN-END:variables
 
 }
