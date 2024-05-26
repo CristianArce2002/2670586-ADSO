@@ -3,6 +3,8 @@ package principal;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.Box;
@@ -18,6 +20,8 @@ public class Pokedex extends javax.swing.JFrame {
     int[] listaNumeros = {1, 2, 3, 4, 5, 6, 7};
     int paginaActual = 0;
     int cantidadPokemon;
+    int cantidadPaginas;
+    int paginaContador = 1;
 
     public Pokedex() {
         this.consumo = new ConsumoAPI();
@@ -27,6 +31,7 @@ public class Pokedex extends javax.swing.JFrame {
         initAlternComponents();
         cargarPokemones();
         cargarPaginador();
+
     }
 
     @SuppressWarnings("unchecked")
@@ -117,32 +122,28 @@ public class Pokedex extends javax.swing.JFrame {
 
     public void cargarPokemones() {
         panelBotones.removeAll();
-        int offset = (this.pagina * 20) - 20;
-        String endpoint = "https://pokeapi.co/api/v2/pokemon?offset=" + offset + paginaActual * 20;
+        int offset = (paginaActual * 20);
+        String endpoint = "https://pokeapi.co/api/v2/pokemon?offset=" + offset + "&limit=20";
         String data = this.consumo.consumoGET(endpoint);
-        
-
         JsonObject dataJson = JsonParser.parseString(data).getAsJsonObject();
         JsonArray results = dataJson.getAsJsonArray("results");
-        System.out.println(dataJson.get("count"));
+        cantidadPokemon = dataJson.get("count").getAsInt();
+        cantidadPaginas = (cantidadPokemon / 20) + ((cantidadPokemon % 20 > 0) ? 1 : 0);
+
         for (int i = 0; i < results.size(); i++) {
             JsonObject temp = results.get(i).getAsJsonObject();
-
             JButton btn = new JButton(temp.get("name").getAsString());
             panelBotones.add(btn);
-
             btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("Nombre: " + temp.get("name").getAsString());
                     System.out.println("Url: " + temp.get("url").getAsString());
-
                     panelDetalle.removeAll();
                     DetallePokemon detalle = new DetallePokemon(temp);
                     detalle.setSize(panelDetalle.getSize());
                     detalle.setPreferredSize(panelDetalle.getPreferredSize());
                     panelDetalle.add(detalle);
-
                     revalidate();
                     repaint();
                 }
@@ -154,45 +155,100 @@ public class Pokedex extends javax.swing.JFrame {
         detalle.setSize(panelDetalle.getSize());
         detalle.setPreferredSize(panelDetalle.getPreferredSize());
         panelDetalle.add(detalle);
-
         revalidate();
         repaint();
     }
 
     public void cargarPaginador() {
-
         panelPaginador.removeAll();
         panelPaginador.add(Box.createHorizontalGlue());
 
         JButton inicio = new JButton("<<");
+        inicio.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                paginaActual = 0;
+                cargarPokemones();
+                cargarPaginador();
+            }
+        });
+
         JButton moverIzquierda = new JButton("<");
+        moverIzquierda.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (paginaActual > 0) {
+                    paginaActual--;
+                    cargarPokemones();
+                    cargarPaginador();
+                }
+            }
+        });
 
         panelPaginador.add(inicio);
         panelPaginador.add(moverIzquierda);
 
-        for (int i = pagina; i < listaNumeros.length; i++) {
-            int pagina_boton = i;
+        int inicioContador = paginaContador * 7 + 1;
+        int finContador = inicioContador + 6;
+
+        if (paginaActual < inicioContador || paginaActual > finContador) {
+            paginaContador = paginaActual / 7;
+            inicioContador = paginaContador * 7 + 1;
+            finContador = inicioContador + 6;
+        } else if (paginaActual % 7 == 0 && paginaActual != 0) {
+            paginaContador++;
+            inicioContador = paginaContador * 7 + 1;
+            finContador = inicioContador + 6;
+        }
+
+        for (int i = inicioContador; i <= finContador && i <= cantidadPaginas; i++) {
+            int pagina_boton = i - 1;
             JButton boton = new JButton(String.valueOf(i));
             boton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    paginaActual = pagina_boton - 1;
+                    paginaActual = pagina_boton;
                     cargarPokemones();
+                    cargarPaginador();
                 }
             });
+
+            if (pagina_boton == paginaActual) {
+                boton.setBackground(Color.BLUE);
+                boton.setForeground(Color.WHITE);
+            }
+
             panelPaginador.add(boton);
         }
 
-        JButton ultimo = new JButton(">>");
         JButton moverDerecha = new JButton(">");
+        moverDerecha.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (paginaActual < cantidadPaginas - 1) {
+                    paginaActual++;
+                    cargarPokemones();
+                    cargarPaginador();
+                }
+            }
+        });
+
+        JButton ultimo = new JButton(">>");
+        ultimo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                paginaActual = cantidadPaginas - 1;
+                cargarPokemones();
+                cargarPaginador();
+            }
+        });
 
         panelPaginador.add(moverDerecha);
         panelPaginador.add(ultimo);
-        
-        repaint();
-        revalidate();
+        panelPaginador.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelPaginador.revalidate();
+        panelPaginador.repaint();
     }
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel contentPrincipal;
