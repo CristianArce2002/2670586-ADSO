@@ -1,29 +1,14 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
 package utils;
 
 import java.awt.Image;
 import java.net.URL;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-/**
- *
- * @author INSTRUCTOR
- */
 public class Card extends javax.swing.JPanel {
 
-    /**
-     * Creates new form Card
-     */
     public Card(Digimon digi) {
-
-        System.out.println(digi.getHref());
         initComponents();
         initAlter(digi);
-
     }
 
     public void initAlter(Digimon digi) {
@@ -77,7 +62,6 @@ public class Card extends javax.swing.JPanel {
                 .addGap(18, 18, 18))
         );
     }// </editor-fold>//GEN-END:initComponents
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel etqCardImagen;
