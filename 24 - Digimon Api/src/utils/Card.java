@@ -1,17 +1,30 @@
 package utils;
 
 import java.awt.Image;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URL;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 
 public class Card extends javax.swing.JPanel {
 
-    public Card(Digimon digi) {
+    Digimon digi;
+    
+    public Card(Digimon digi, JFrame ventanaDigidex) {
+        this.digi = digi;
         initComponents();
-        initAlter(digi);
+        initAlter();
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ventanaDigidex.setVisible(false);
+                Detalle detalle = new Detalle(digi, ventanaDigidex);
+            }
+        });
     }
 
-    public void initAlter(Digimon digi) {
+    public void initAlter() {
         String url = digi.getImage();
         URL imgURL;
         try {

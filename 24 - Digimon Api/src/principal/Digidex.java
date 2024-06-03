@@ -29,7 +29,7 @@ public class Digidex extends javax.swing.JFrame {
     }
 
     public void initAlterComponents() {
-
+        setTitle("Digidex");
         setVisible(true);
 
         // Logo principal digimon
@@ -78,7 +78,7 @@ public class Digidex extends javax.swing.JFrame {
     public void añadirCards() {
         contenedorDigimons.removeAll();
         for (int i = 0; i < misDigimons.size(); i++) {
-            Card hola = new Card(misDigimons.get(i));
+            Card hola = new Card(misDigimons.get(i), this);
             contenedorDigimons.add(hola);
         }
         contenedorDigimons.setLayout(new GridLayout(0, 3));
@@ -180,12 +180,13 @@ public class Digidex extends javax.swing.JFrame {
         contenedorDigimons = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
         jPanel1.add(etqLogo, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 20, 320, 60));
 
-        panelPaginador.setLayout(new java.awt.GridLayout());
+        panelPaginador.setLayout(new java.awt.GridLayout(1, 0));
         jPanel1.add(panelPaginador, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 600, 760, 50));
 
         contenedorDigimons.setLayout(new javax.swing.BoxLayout(contenedorDigimons, javax.swing.BoxLayout.LINE_AXIS));
@@ -203,6 +204,7 @@ public class Digidex extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
