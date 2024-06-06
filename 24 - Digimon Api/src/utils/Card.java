@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 public class Card extends javax.swing.JPanel {
 
     Digimon digi;
-    
+
     public Card(Digimon digi, JFrame ventanaDigidex) {
         this.digi = digi;
         initComponents();
@@ -36,7 +36,7 @@ public class Card extends javax.swing.JPanel {
             etqCardImagen.setIcon(icon);
             etqNombre.setText(digi.getName());
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error al obtener imagen");;
         }
     }
 
