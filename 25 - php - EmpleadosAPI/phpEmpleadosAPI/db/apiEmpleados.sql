@@ -45,3 +45,14 @@ VALUES
     ('Sofía', 'Ramos', 'sofia.ramos@sucursal.com', '934567890', '1995-06-06', '2015-06-06', 'Vendedor', 28000.00, 3),
     ('Carlos', 'Gómez', 'carlos.gomez@sucursal.com', '915123456', '1990-07-07', '2010-07-07', 'Gerente', 70000.00, 4),
     ('Lucía', 'López', 'lucia.lopez@sucursal.com', '934567890', '1992-08-08', '2012-08-08', 'Asistente', 32000.00, 4);
+
+DELIMITER //
+
+CREATE TRIGGER eliminarEmpleados
+BEFORE DELETE ON sucursales
+FOR EACH ROW
+BEGIN
+    DELETE FROM empleados WHERE idSucursal = OLD.id;
+END //
+
+DELIMITER ;

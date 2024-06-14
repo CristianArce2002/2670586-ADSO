@@ -7,6 +7,7 @@
         and !empty($_POST['pais'])
         and !empty($_POST['ciudad'])
         and !empty($_POST['direccion'])
+        and !empty($_POST['telefono'])
         and !empty($_POST['correo'])
         and !empty($_POST['horarioAtencion'])
         and !empty($_POST['cantidadEmpleados'])
@@ -16,13 +17,14 @@
         $pais = $_POST['pais'];
         $ciudad = $_POST['ciudad'];
         $direccion = $_POST['direccion'];
+        $telefono = $_POST['telefono'];
         $correo = $_POST['correo'];
         $horarioAtencion = $_POST['horarioAtencion'];
         $cantidadEmpleados = $_POST['cantidadEmpleados'];
 
         // Crear consulta insert
-        $query = "INSERT INTO sucursales (nombre, pais, ciudad, direccion, correo, horarioAtencion, cantidadEmpleados)
-        VALUES (:nombre, :pais, :ciudad, :direccion, :correo, :horarioAtencion, :cantidadEmpleados)";
+        $query = "INSERT INTO sucursales (nombre, pais, ciudad, direccion, telefono, correo, horarioAtencion, cantidadEmpleados)
+        VALUES (:nombre, :pais, :ciudad, :direccion, :telefono, :correo, :horarioAtencion, :cantidadEmpleados)";
 
         try {
             $consulta = $database->prepare($query);
@@ -32,6 +34,7 @@
             $consulta->bindParam(':pais', $pais);
             $consulta->bindParam(':ciudad', $ciudad);
             $consulta->bindParam(':direccion', $direccion);
+            $consulta->bindParam(':telefono', $telefono);
             $consulta->bindParam(':correo', $correo);
             $consulta->bindParam(':horarioAtencion', $horarioAtencion);
             $consulta->bindParam(':cantidadEmpleados', $cantidadEmpleados);

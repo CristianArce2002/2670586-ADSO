@@ -1,7 +1,7 @@
 <?php 
 	include 'coneccion/coneccion.php';
 
-    $consulta = $database->query("SELECT * FROM empleados");
+    $consulta = $database->query("SELECT * FROM sucursales");
     $datos = $consulta->fetchAll(PDO::FETCH_ASSOC);
 
     $datos = mb_convert_encoding($datos, "UTF-8", "iso-8859-1");
